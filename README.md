@@ -3,9 +3,9 @@
 
 A program created using python and pygame to visualise and play piano midi files
 
-## Video
+## Screenshot
 
-![App Screenshot](Video.mp4)
+![App Screenshot](Screenshot.png)
 
 
 ## Run Locally
