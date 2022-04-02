@@ -1,4 +1,6 @@
 from threading import Thread
+
+from numpy.lib.function_base import blackman
 from key import *
 from piano import Piano
 import pygame as pg
@@ -18,6 +20,7 @@ class Main:
         self.midiFile = self.load_midi_file()
         self.display = self.setup_pygame(self.song_name)
 
+        self.background = self.create_background()
         self.piano = Piano()
         self.piano_roll = PianoRoll(self.midiFile)
 
@@ -53,6 +56,13 @@ class Main:
         pg.time.delay(10)
         self.running = False
 
+    def create_background(self):
+        background = pg.Surface((1248, 500))
+        background.fill((255, 255, 0))
+        image = pg.image.load('doodad.png')
+        background.blit(image, (0, 0))
+        return background
+
     def mainloop(self):
 
         # Start playing midi File in separate Thread
@@ -67,7 +77,7 @@ class Main:
             offset = self.time * 100 + 400
 
             # Update screen
-            self.display.fill((0, 0, 0))
+            self.display.blit(self.background, (0, 0))
             self.piano_roll.draw(self.display, offset)
             self.piano.draw_keys(self.display)
             pg.display.flip()

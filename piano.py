@@ -30,27 +30,28 @@ class Piano:
         white_dict = {
             'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'a': 7, 'b': 8
         }
+        pressed_colour = (213, 50, 66, 200)
 
         for key in self.keys.items():
             if key[1].is_pressed:
                 # Checks if is a sharp note
                 if key[0][-1] == '#':
                     if key[0] == 'a0#':
-                        pg.draw.rect(self.black_pressed_surface, (255, 0, 0, 150), (16, 0, 14, 70),
+                        pg.draw.rect(self.black_pressed_surface, pressed_colour, (16, 0, 14, 70),
                                      border_radius=5)
                     else:
-                        pg.draw.rect(self.black_pressed_surface, (255, 0, 0, 150), (16 + 24 * black_dict[key[0][0]] + 24 * 7 * (int(key[0][1]) - 1), 0, 14, 70),
+                        pg.draw.rect(self.black_pressed_surface, pressed_colour, (16 + 24 * black_dict[key[0][0]] + 24 * 7 * (int(key[0][1]) - 1), 0, 14, 70),
                                      border_radius=5)
                 else:
                     if key[0] == 'a0':
                         pg.draw.rect(self.white_pressed_surface,
-                                     (255, 0, 0, 150), (0, 0, 24, 100), border_radius=5)
+                                     pressed_colour, (0, 0, 24, 100), border_radius=5)
                     elif key[0] == 'b0':
                         pg.draw.rect(self.white_pressed_surface,
-                                     (255, 0, 0, 150), (24, 0, 24, 100), border_radius=5)
+                                     pressed_colour, (24, 0, 24, 100), border_radius=5)
                     else:
                         pg.draw.rect(self.white_pressed_surface,
-                                     (255, 0, 0, 150), (24 * white_dict[key[0][0]] + (int(key[0][1]) - 1) * 24 * 7, 0, 24, 100), border_radius=5)
+                                     pressed_colour, (24 * white_dict[key[0][0]] + (int(key[0][1]) - 1) * 24 * 7, 0, 24, 100), border_radius=5)
 
     def create_key_surfaces(self):
         white_keys = pg.surface.Surface(
@@ -58,15 +59,19 @@ class Piano:
         black_keys = pg.surface.Surface(
             (1248, 100), pg.SRCALPHA, 32).convert_alpha()
         for i in range(52):
-            pg.draw.rect(white_keys, (255, 255, 255), (i * 24, 0, 24, 100),
+            pg.draw.rect(white_keys, (200, 200, 200), (i * 24, 0, 24, 100),
+                         border_radius=5)
+            pg.draw.rect(white_keys, (255, 255, 255), (i * 24, 0, 24, 93),
                          border_radius=5)
             pg.draw.rect(white_keys, (0, 0, 0), (i * 24, 0, 24, 100),
                          width=1, border_radius=5)
 
         for i in range(50):
             if i not in [1, 4, 8, 11, 15, 18, 22, 25, 29, 32, 36, 39, 43, 46]:
-                pg.draw.rect(black_keys, (0, 0, 0), (i * 24 + 16, 0, 14, 70),
-                             border_radius=5)
+                pg.draw.rect(black_keys, (150, 150, 150), (i * 24 + 16, 0, 14, 68),
+                             border_bottom_left_radius=2, border_bottom_right_radius=2)
+                pg.draw.rect(black_keys, (0, 0, 0), (i * 24 + 16 + 2, 0, 10, 70),
+                             border_bottom_left_radius=2, border_bottom_right_radius=2)
 
         return (white_keys, black_keys)
 
