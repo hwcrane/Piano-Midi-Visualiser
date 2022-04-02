@@ -48,7 +48,7 @@ class PianoRoll:
         surface = pg.Surface((1248, surface_height))
         surface.set_colorkey((255, 255, 255))
         surface.fill((42, 42, 42))
-        for i in range(7):
+        for i in range(8):
             pg.draw.line(surface, (60, 60, 60),
                          (48 + 7 * i * 24, 0), (48 + 7 * i * 24, surface_height))
 
