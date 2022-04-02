@@ -18,7 +18,7 @@ def create_keymap() -> dict[str, str]:
 
     # sharps that go 0 -> 7
     keymap.update({
-        f'{n}{i}#': f'notes/{n}{i}#.wav' for n in ['a', 'b'] for i in range(8)
+        f'{n}{i}#': f'notes/{n}{i}#.wav' for n in ['a'] for i in range(8)
     })
 
     # Sharps that go 1 -> 7

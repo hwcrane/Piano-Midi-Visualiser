@@ -1,28 +1,84 @@
 from key import Key
 from keymap import create_keymap
-from pygame import time
+import pygame as pg
 from threading import Thread
 
 
 class Piano:
     def __init__(self) -> None:
         self.keys = self.load_keys()
+        self.white_key_surface, self.black_key_surface = self.create_key_surfaces()
+        self.white_pressed_surface = pg.surface.Surface(
+            (1248, 100), pg.SRCALPHA, 32).convert_alpha()
+        self.black_pressed_surface = pg.surface.Surface(
+            (1248, 100), pg.SRCALPHA, 32).convert_alpha()
 
-    def press_key(self, key_name: str, duration: int) -> None:
-        self.play_key(key_name, 127)
-        time.delay(duration)
-        self.stop_key(key_name)
+    def draw_keys(self, surface):
+        self.draw_pressed()
+        surface.blit(self.white_key_surface, (0, 400))
+        surface.blit(self.white_pressed_surface, (0, 400))
+        surface.blit(self.black_key_surface, (0, 400))
+        surface.blit(self.black_pressed_surface, (0, 400))
+        pg.display.update()
 
-    def press_key_asyc(self, key_name: str, duration: int) -> None:
-        thread = Thread(target=self.press_key, args=(key_name, duration))
-        thread.start()
-        thread.join()
+    def draw_pressed(self):
+        self.white_pressed_surface.fill((0, 0, 0, 0))
+        self.black_pressed_surface.fill((0, 0, 0, 0))
+        black_dict = {
+            'c': 2, 'd': 3, 'f': 5, 'g': 6, 'a': 7
+        }
+        white_dict = {
+            'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'a': 7, 'b': 8
+        }
+
+        for key in self.keys.items():
+            if key[1].is_pressed:
+                # Checks if is a sharp note
+                if key[0][-1] == '#':
+                    if key[0] == 'a0#':
+                        pg.draw.rect(self.black_pressed_surface, (255, 0, 0, 150), (16, 0, 14, 70),
+                                     border_radius=5)
+                    else:
+                        pg.draw.rect(self.black_pressed_surface, (255, 0, 0, 150), (16 + 24 * black_dict[key[0][0]] + 24 * 7 * (int(key[0][1]) - 1), 0, 14, 70),
+                                     border_radius=5)
+                else:
+                    if key[0] == 'a0':
+                        pg.draw.rect(self.white_pressed_surface,
+                                     (255, 0, 0, 150), (0, 0, 24, 100), border_radius=5)
+                    elif key[0] == 'b0':
+                        pg.draw.rect(self.white_pressed_surface,
+                                     (255, 0, 0, 150), (24, 0, 24, 100), border_radius=5)
+                    else:
+                        pg.draw.rect(self.white_pressed_surface,
+                                     (255, 0, 0, 150), (24 * white_dict[key[0][0]] + (int(key[0][1]) - 1) * 24 * 7, 0, 24, 100), border_radius=5)
+
+    def create_key_surfaces(self):
+        white_keys = pg.surface.Surface(
+            (1248, 100), pg.SRCALPHA, 32).convert_alpha()
+        black_keys = pg.surface.Surface(
+            (1248, 100), pg.SRCALPHA, 32).convert_alpha()
+        for i in range(52):
+            pg.draw.rect(white_keys, (255, 255, 255), (i * 24, 0, 24, 100),
+                         border_radius=5)
+            pg.draw.rect(white_keys, (0, 0, 0), (i * 24, 0, 24, 100),
+                         width=1, border_radius=5)
+
+        for i in range(50):
+            if i not in [1, 4, 8, 11, 15, 18, 22, 25, 29, 32, 36, 39, 43, 46]:
+                pg.draw.rect(black_keys, (0, 0, 0), (i * 24 + 16, 0, 14, 70),
+                             border_radius=5)
+
+        return (white_keys, black_keys)
 
     def play_key(self, key_name: str, velocity) -> None:
-        self.keys[key_name].play(velocity)
+        thread = Thread(target=self.keys[key_name].play, args=[velocity])
+        thread.start()
+        # self.keys[key_name].play(velocity)
 
     def stop_key(self, key_name: str) -> None:
-        self.keys[key_name].stop()
+        thread = Thread(target=self.keys[key_name].stop)
+        thread.start()
+        # self.keys[key_name].stop()
 
     def load_keys(self) -> dict[str, Key]:
         keymap = create_keymap()
