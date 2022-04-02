@@ -54,7 +54,7 @@ class Piano:
 
     def create_key_surfaces(self):
         white_keys = pg.surface.Surface(
-            (1248, 100), pg.SRCALPHA, 32).convert_alpha()
+            (1248, 100))
         black_keys = pg.surface.Surface(
             (1248, 100), pg.SRCALPHA, 32).convert_alpha()
         for i in range(52):
@@ -71,14 +71,14 @@ class Piano:
         return (white_keys, black_keys)
 
     def play_key(self, key_name: str, velocity) -> None:
-        thread = Thread(target=self.keys[key_name].play, args=[velocity])
-        thread.start()
-        # self.keys[key_name].play(velocity)
+        # thread = Thread(target=self.keys[key_name].play, args=[velocity])
+        # thread.start()
+        self.keys[key_name].play(velocity)
 
     def stop_key(self, key_name: str) -> None:
-        thread = Thread(target=self.keys[key_name].stop)
-        thread.start()
-        # self.keys[key_name].stop()
+        # thread = Thread(target=self.keys[key_name].stop)
+        # thread.start()
+        self.keys[key_name].stop()
 
     def load_keys(self) -> dict[str, Key]:
         keymap = create_keymap()

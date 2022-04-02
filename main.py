@@ -5,127 +5,84 @@ import pygame as pg
 from mido import MidiFile
 from keymap import midi_number_to_note
 import sys
+from piano_roll import PianoRoll
 
 
-class C:
-    def __init__(self):
+class Main:
+    def __init__(self) -> None:
         self.time = 0
+        self.running = True
+        self.clock = pg.time.Clock()
+        self.song_name = self.get_song_name()
 
+        self.midiFile = self.load_midi_file()
+        self.display = self.setup_pygame(self.song_name)
 
-def play_notes():
-    for msg in mid:
-        if not running:
-            return
-        if not msg.is_meta:
-            for _ in range(10):
-                pg.time.delay(round(msg.time * 100))
-                counter.time += msg.time / 10
-            if msg.type == "note_on":
-                p.play_key(midi_number_to_note(msg.note), msg.velocity)
-            elif msg.type == "note_off":
-                p.stop_key(midi_number_to_note(msg.note))
+        self.piano = Piano()
+        self.piano_roll = PianoRoll(self.midiFile)
 
+    def setup_pygame(self, songName: str):
+        pg.init()
+        display = pg.display.set_mode((1248, 500))
+        pg.display.set_caption(f'Playing: {songName}')
+        pg.mixer.set_num_channels(100)
+        return display
 
-def transcribe_song(song: MidiFile):
-    # [note, start_time, end_time]
-    note_history = []
-    # [note, start_time]
-    playing_notes = []
+    def get_song_name(self):
+        return sys.argv[1]
 
-    time = 0
-    for msg in song:
-        if not msg.is_meta:
-            time += msg.time
-            if msg.type == "note_off" or msg.type == "note_on" and msg.velocity == 0:
-                note = midi_number_to_note(msg.note)
-                note_index = index_of_note(note, playing_notes)
-                if note_index >= 0:
-                    played_note = playing_notes.pop(note_index)
-                    played_note.append(time)
-                    note_history.append(played_note)
-            elif msg.type == "note_on":
-                note = midi_number_to_note(msg.note)
-                playing_notes.append([note, time])
-    return note_history
+    def load_midi_file(self):
+        file = sys.argv[1]
+        return MidiFile(file, clip=True)
 
+    def play_notes(self):
+        for msg in self.midiFile:
+            if not self.running:
+                return
+            if not msg.is_meta:
+                divider = round(10 + msg.time * 100)
+                for _ in range(divider):
+                    pg.time.delay(round((msg.time * 1000) / divider))
+                    self.time += msg.time / divider
+                if msg.type == "note_on":
+                    self.piano.play_key(
+                        midi_number_to_note(msg.note), msg.velocity)
+                elif msg.type == "note_off":
+                    self.piano.stop_key(midi_number_to_note(msg.note))
 
-def draw_all_notes_to_surface(notes):
+        pg.time.delay(10)
+        self.running = False
 
-    black_dict = {
-        'c': 2, 'd': 3, 'f': 5, 'g': 6, 'a': 7
-    }
+    def mainloop(self):
 
-    white_dict = {
-        'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'a': 7, 'b': 8
-    }
+        # Start playing midi File in separate Thread
+        thread = Thread(target=self.play_notes)
+        thread.start()
 
-    surface_height = round(notes[-1][2] * 100)
-    surface = pg.Surface((1248, surface_height))
-    for (note, start, end) in notes:
-        s = round(start * 100)
-        nend = round(end * 100)
-        length = nend - s
-        nstart = surface_height - s - length
+        # Pygame Main loop
+        while self.running:
+            self.clock.tick(50)
 
-        if note[-1] == '#':
-            if note == 'a0#':
-                pg.draw.rect(surface, (0, 0, 255), (16, nstart, 14, length),
-                             border_radius=5)
-            else:
-                pg.draw.rect(surface, (0, 0, 255), (16 + 24 * black_dict[note[0]] + 24 * 7 * (int(note[1]) - 1), nstart, 14, length),
-                             border_radius=5)
-        else:
-            if note == 'a0':
-                pg.draw.rect(surface, (0, 255, 0),
-                             (0, nstart, 24, length), border_radius=5)
-            elif note == 'b0':
-                pg.draw.rect(surface, (0, 255, 0),
-                             (24, nstart, 24, length), border_radius=5)
-            else:
-                pg.draw.rect(surface, (0, 255, 0), (24 * white_dict[note[0]] + (
-                    int(note[1]) - 1) * 24 * 7, nstart, 24, length), border_radius=5)
-    return surface
+            # Calculate piano roll offaet
+            offset = self.time * 100 + 400
 
+            # Update screen
+            self.display.fill((0, 0, 0))
+            self.piano_roll.draw(self.display, offset)
+            self.piano.draw_keys(self.display)
+            pg.display.flip()
 
-def index_of_note(note, arr) -> int:
-    for i, n in enumerate(arr):
-        if n[0] == note:
-            return i
-    return -1
+            # Check if window closed
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.running = False
+
+        # Makes sure thread has stopped before ending program
+        if thread.is_alive():
+            thread.join()
 
 
 if __name__ == '__main__':
-    pg.init()
-    display = pg.display.set_mode((1248, 500))
+    Main().mainloop()
 
-    pg.mixer.set_num_channels(100)
-    p = Piano()
-    p.draw_keys(display)
-    pg.display.update()
-    file = sys.argv[1]
-    mid = MidiFile(file)
-    notes = draw_all_notes_to_surface(transcribe_song(mid))
-    clock = pg.time.Clock()
-
-    counter = C()
-    running = True
-
-    thread = Thread(target=play_notes)
-    thread.start()
-
-    while running:
-        clock.tick(50)
-
-        offset = counter.time * 100 + 400
-
-        display.fill((0, 0, 0))
-        display.blit(notes, (0, -notes.get_height() + offset))
-        p.draw_keys(display)
-        pg.display.flip()
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                running = False
-    if thread.is_alive():
-        thread.join()
     pg.quit()
