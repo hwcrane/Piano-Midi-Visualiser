@@ -53,7 +53,7 @@ class Main:
                 elif msg.type == "note_off":
                     self.piano.stop_key(midi_number_to_note(msg.note))
 
-        pg.time.delay(10)
+        pg.time.delay(2000)
         self.running = False
 
     def create_background(self):
